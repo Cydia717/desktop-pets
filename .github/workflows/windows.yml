@@ -31,6 +31,8 @@ jobs:
           cache-dependency-path: renderer/package-lock.json
       - name: Install locked dependencies
         run: npm ci
+      - name: Check code and automated regressions
+        run: npm run lint && npm test
       - name: Check Electron entry
         run: node --check electron/main.cjs
       - name: Build and type-check renderer
@@ -45,7 +47,16 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Verify packaged files
-        run: node -e "const a=require('@electron/asar'); const p=a.listPackage('release/win-unpacked/resources/app.asar').map(s=>s.replaceAll(String.fromCharCode(92),'/')); for (const f of ['/dist/index.html','/dist/blue-dino.png','/electron/main.cjs']) { if(!p.includes(f)) throw new Error('Missing packaged file '+f); }"
+        run: node -e "const a=require('@electron/asar'); const p=a.listPackage('release/win-unpacked/resources/app.asar').map(s=>s.replaceAll(String.fromCharCode(92),'/')); for (const f of ['/dist/index.html','/dist/blue-dino.png','/electron/main.cjs','/electron/preload.cjs','/dist/animations/manifest.json','/dist/animations/blink.png','/dist/animations/sleep.png','/dist/animations/walk.png','/dist/animations/look.png']) { if(!p.includes(f)) throw new Error('Missing packaged file '+f); }"
+      - name: Smoke-test packaged Windows renderer
+        shell: pwsh
+        run: |
+          $app = Start-Process -FilePath '.\release\win-unpacked\Desktop Pets.exe' -ArgumentList '--smoke-test' -PassThru
+          if (!$app.WaitForExit(25000)) {
+            Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
+            throw 'Desktop renderer startup timed out'
+          }
+          if ($app.ExitCode -ne 0) { throw "Desktop renderer startup failed: $($app.ExitCode)" }
       - name: Generate SHA-256 checksums
         shell: pwsh
         run: |
