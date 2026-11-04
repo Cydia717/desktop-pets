@@ -10,7 +10,7 @@
 - 现有项目 TypeScript 与 Vite 生产构建通过，Electron 入口语法检查通过。
 - 添加 Windows x64 portable 打包配置与 GitHub Actions；检查构建产物及打入 app.asar 的角色素材，生成 SHA-256。
 - 代码提交并推送：b67e8f995baea36f693d60a357159528adf6f8fe。
-- 第一次 Windows 构建已启动：https://github.com/Cydia717/desktop-pets/actions/runs/41915723919 。
+- 第一次 Windows 构建已成功（3 分 28 秒），打包素材检查与上传均通过：https://github.com/Cydia717/desktop-pets/actions/runs/41915723919 。
 
 ### 问题与处理
 
@@ -24,6 +24,12 @@
 
 ### 下一步
 
-- 等待 Windows 首次打包完成并检查产物。
+- 已下载并检查首次构建产物：ZIP 完整性、EXE 的 SHA-256 与 Windows PE 文件头均通过。
 - 用户在 Windows 下载、运行初版，检查透明背景、置顶和 Esc 退出。
 - 后续再实现拖动、托盘与正式动画。
+
+### 首次 EXE 产物
+
+- 文件：`Desktop-Pets-0.0.0-x64.exe`，111,877,112 字节。
+- SHA-256：`31640b09c650edfff67564bd6d45d64e11d5481e779edb2114a73625e40f0415`。
+- 构建产物保留至 2026-11-18；运行效果仍待用户 Windows 实机测试。
