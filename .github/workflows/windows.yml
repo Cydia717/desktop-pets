@@ -1,0 +1,66 @@
+name: Build Windows Desktop Pets
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'renderer/**'
+      - '.github/workflows/windows.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: renderer
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: renderer/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Check Electron entry
+        run: node --check electron/main.cjs
+      - name: Build and type-check renderer
+        run: npm run build
+      - name: Verify character asset was built
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'dist/blue-dino.png')) { throw 'Missing blue-dino.png in build output' }
+          if (!(Test-Path 'dist/index.html')) { throw 'Missing renderer entry' }
+      - name: Package Windows portable EXE
+        run: npx --no-install electron-builder --config electron-builder.yml --win portable --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged files
+        run: node -e "const a=require('@electron/asar'); const p=a.listPackage('release/win-unpacked/resources/app.asar').map(s=>s.replaceAll(String.fromCharCode(92),'/')); for (const f of ['/dist/index.html','/dist/blue-dino.png','/electron/main.cjs']) { if(!p.includes(f)) throw new Error('Missing packaged file '+f); }"
+      - name: Generate SHA-256 checksums
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem release -Filter *.exe -File)
+          if ($files.Count -eq 0) { throw 'No EXE was generated' }
+          $files | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Set-Content release/SHA256SUMS.txt
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v6
+        with:
+          name: Desktop-Pets-Windows-x64
+          path: |
+            renderer/release/*.exe
+            renderer/release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

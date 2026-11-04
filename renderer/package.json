@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build --base=./",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dist:win": "npm run build && electron-builder --config electron-builder.yml --win portable --x64 --publish never"
   },
   "dependencies": {
     "react": "^19.3.1",
@@ -27,5 +28,8 @@
   "allowScripts": {
     "electron-winstaller@5.4.0": true
   },
-  "main": "electron/main.cjs"
+  "main": "electron/main.cjs",
+  "description": "Windows desktop companion with a blue plush dinosaur",
+  "author": "Cydia717",
+  "license": "UNLICENSED"
 }

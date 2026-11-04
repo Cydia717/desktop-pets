@@ -1,0 +1,17 @@
+appId: com.cydia717.desktoppets
+productName: Desktop Pets
+asar: true
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  signAndEditExecutable: false
+portable:
+  artifactName: Desktop-Pets-${version}-${arch}.${ext}
